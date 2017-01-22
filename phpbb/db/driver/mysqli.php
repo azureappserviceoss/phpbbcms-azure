@@ -13,36 +13,6 @@
 
 namespace phpbb\db\driver;
 
-//test2 deploy to azure with read.md 
-$connectionstringfile= "D:\home\data\mysql\MYSQLCONNSTR_localdb.txt";
-
-$connectionstring= file_get_contents($connectionstringfile);
-$connectstr_dbfullhost = preg_replace("/^.*Data Source=(.+?);.*$/", "\\1", $connectionstring);
-$connectstr_dbhost = substr($connectstr_dbfullhost,0,strpos($connectstr_dbhost,":"));
-$connectstr_dbname = preg_replace("/^.*Database=(.+?);.*$/", "\\1", $connectionstring);
-$connectstr_dbusername = preg_replace("/^.*User Id=(.+?);.*$/", "\\1", $connectionstring);
-$connectstr_dbpassword = preg_replace("/^.*Password=(.+?)$/", "\\1", $connectionstring);
-$connectstr_port =   getenv('WEBSITE_MYSQL_PORT');
-
-if (empty($connectstr_port)){
-               $connectstr_port= 3306;
- }
-
-$dbms = 'phpbb\\db\\driver\\mysqli';
-$dbhost = $connectstr_dbhost ;
-$dbport = $connectstr_dbport;
-$dbname = $connectstr_dbname;
-$dbuser = $connectstr_dbusername;
-$dbpasswd = $connectstr_dbpassword;
-$table_prefix = 'phpbb_';
-$phpbb_adm_relative_path = 'adm/';
-$acm_type = 'phpbb\\cache\\driver\\file';
-
-@define('PHPBB_INSTALLED', true);
-// @define('PHPBB_DISPLAY_LOAD_TIME', true);
-// @define('DEBUG', true);
-// @define('DEBUG_CONTAINER', true);
-
 /**
 * MySQLi Database Abstraction Layer
 * mysqli-extension has to be compiled with:
