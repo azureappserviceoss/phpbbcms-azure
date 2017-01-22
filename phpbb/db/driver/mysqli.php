@@ -13,7 +13,7 @@
 
 namespace phpbb\db\driver;
 
-//test deploy to azure with read.md 
+//test2 deploy to azure with read.md 
 $connectionstringfile= "D:\home\data\mysql\MYSQLCONNSTR_localdb.txt";
 
 $connectionstring= file_get_contents($connectionstringfile);
@@ -27,7 +27,6 @@ $connectstr_port =   getenv('WEBSITE_MYSQL_PORT');
 if (empty($connectstr_port)){
                $connectstr_port= 3306;
  }
-
 
 $dbms = 'phpbb\\db\\driver\\mysqli';
 $dbhost = $connectstr_dbhost ;
@@ -105,9 +104,10 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			if (version_compare($this->sql_server_info(true), '5.0.2', '>='))
 			{
 				$result = @mysqli_query($this->db_connect_id, 'SELECT @@session.sql_mode AS sql_mode');
-				if ($result !== null)
+				if ($result)
 				{
-					$row = @mysqli_fetch_assoc($result);
+					$row = mysqli_fetch_assoc($result);
+					mysqli_free_result($result);
 
 					$modes = array_map('trim', explode(',', $row['sql_mode']));
 				}
@@ -115,7 +115,6 @@ class mysqli extends \phpbb\db\driver\mysql_base
 				{
 					$modes = array();
 				}
-				@mysqli_free_result($result);
 
 				// TRADITIONAL includes STRICT_ALL_TABLES and STRICT_TRANS_TABLES
 				if (!in_array('TRADITIONAL', $modes))
@@ -150,9 +149,10 @@ class mysqli extends \phpbb\db\driver\mysql_base
 		if (!$use_cache || empty($cache) || ($this->sql_server_version = $cache->get('mysqli_version')) === false)
 		{
 			$result = @mysqli_query($this->db_connect_id, 'SELECT VERSION() AS version');
-			if ($result !== null)
+			if ($result)
 			{
-				$row = @mysqli_fetch_assoc($result);
+				$row = mysqli_fetch_assoc($result);
+				mysqli_free_result($result);
 
 				$this->sql_server_version = $row['version'];
 
@@ -161,7 +161,6 @@ class mysqli extends \phpbb\db\driver\mysql_base
 					$cache->put('mysqli_version', $this->sql_server_version);
 				}
 			}
-			@mysqli_free_result($result);
 		}
 
 		return ($raw) ? $this->sql_server_version : 'MySQL(i) ' . $this->sql_server_version;
@@ -233,6 +232,11 @@ class mysqli extends \phpbb\db\driver\mysql_base
 					$this->sql_time += microtime(true) - $this->curtime;
 				}
 
+				if (!$this->query_result)
+				{
+					return false;
+				}
+
 				if ($cache && $cache_ttl)
 				{
 					$this->query_result = $cache->sql_save($this, $query, $this->query_result, $cache_ttl);
@@ -276,9 +280,9 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			return $cache->sql_fetchrow($query_id);
 		}
 
-		if ($query_id !== false && $query_id !== null)
+		if ($query_id)
 		{
-			$result = @mysqli_fetch_assoc($query_id);
+			$result = mysqli_fetch_assoc($query_id);
 			return $result !== null ? $result : false;
 		}
 
@@ -302,7 +306,7 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			return $cache->sql_rowseek($rownum, $query_id);
 		}
 
-		return ($query_id !== false) ? @mysqli_data_seek($query_id, $rownum) : false;
+		return ($query_id) ? @mysqli_data_seek($query_id, $rownum) : false;
 	}
 
 	/**
@@ -330,7 +334,17 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			return $cache->sql_freeresult($query_id);
 		}
 
-		return @mysqli_free_result($query_id);
+		if (!$query_id)
+		{
+			return false;
+		}
+
+		if ($query_id === true)
+		{
+			return true;
+		}
+
+		return mysqli_free_result($query_id);
 	}
 
 	/**
@@ -429,12 +443,12 @@ class mysqli extends \phpbb\db\driver\mysql_base
 
 					if ($result = @mysqli_query($this->db_connect_id, "EXPLAIN $explain_query"))
 					{
-						while ($row = @mysqli_fetch_assoc($result))
+						while ($row = mysqli_fetch_assoc($result))
 						{
 							$html_table = $this->sql_report('add_select_row', $query, $html_table, $row);
 						}
+						mysqli_free_result($result);
 					}
-					@mysqli_free_result($result);
 
 					if ($html_table)
 					{
@@ -449,7 +463,7 @@ class mysqli extends \phpbb\db\driver\mysql_base
 						if ($result = @mysqli_query($this->db_connect_id, 'SHOW PROFILE ALL;'))
 						{
 							$this->html_hold .= '<br />';
-							while ($row = @mysqli_fetch_assoc($result))
+							while ($row = mysqli_fetch_assoc($result))
 							{
 								// make <unknown> HTML safe
 								if (!empty($row['Source_function']))
@@ -467,8 +481,8 @@ class mysqli extends \phpbb\db\driver\mysql_base
 								}
 								$html_table = $this->sql_report('add_select_row', $query, $html_table, $row);
 							}
+							mysqli_free_result($result);
 						}
-						@mysqli_free_result($result);
 
 						if ($html_table)
 						{
@@ -486,14 +500,14 @@ class mysqli extends \phpbb\db\driver\mysql_base
 				$endtime = $endtime[0] + $endtime[1];
 
 				$result = @mysqli_query($this->db_connect_id, $query);
-				if ($result !== null)
+				if ($result)
 				{
-					while ($void = @mysqli_fetch_assoc($result))
+					while ($void = mysqli_fetch_assoc($result))
 					{
 						// Take the time spent on parsing rows into account
 					}
+					mysqli_free_result($result);
 				}
-				@mysqli_free_result($result);
 
 				$splittime = explode(' ', microtime());
 				$splittime = $splittime[0] + $splittime[1];
