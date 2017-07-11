@@ -630,35 +630,13 @@ class install_install extends module
 			
              //Read from environment variables 
             $request->enable_super_globals();
-            $connectstr_dbhost = '';
-            $connectstr_dbfullhost = '';
-            $connectstr_dbname = '';
-            $connectstr_dbusername = '';
-            $connectstr_dbpassword = '';
-			$connectstr_dbport=getenv('WEBSITE_MYSQL_PORT');
-			if (empty($connectstr_dbport))
-			   $connectstr_dbport=3306;
 
-            $connectstr= '';
-            foreach ($_SERVER as $key => $value) {
-                if (strpos($key, "MYSQLCONNSTR_") !== 0) {
-                    continue;
-                }
-                
-                $connectstr_dbfullhost = preg_replace("/^.*Data Source=(.+?);.*$/", "\\1", $value);
-                $connectstr_dbhost = substr($connectstr_dbfullhost, 0 , strpos($connectstr_dbfullhost ,":"));  
-                $connectstr_dbname = preg_replace("/^.*Database=(.+?);.*$/", "\\1", $value);
-                $connectstr_dbusername = preg_replace("/^.*User Id=(.+?);.*$/", "\\1", $value);
-                $connectstr_dbpassword = preg_replace("/^.*Password=(.+?)$/", "\\1", $value);
-            }
-                        
-            
-            
-			$data['dbhost']=  $connectstr_dbhost;
-			$data['dbport']=  $connectstr_dbport;
-			$data['dbuser']= $connectstr_dbusername;
-			$data['dbpasswd']= $connectstr_dbpassword ;
-			$data['dbname']=  $connectstr_dbname;
+            // Linux setting for DB information - Azure web app 
+			$data['dbhost']=  getenv('DATABASE_HOST');
+			$data['dbport']=  3306;
+			$data['dbuser']= getenv('DATABASE_USERNAME');;
+			$data['dbpasswd']= getenv('DATABASE_PASSWORD');;
+			$data['dbname']=  getenv('DATABASE_NAME');;
 			$data['table_prefix'] = (!empty($data['table_prefix']) ? $data['table_prefix'] : 'phpbb_');
 			
 						
